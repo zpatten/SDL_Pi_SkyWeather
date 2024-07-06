@@ -63,6 +63,7 @@ WIND_FACTOR = 2.400 / SDL_INTERRUPT_CLICKS
 def fuzzyCompare(compareValue, value):
 	
 	VARYVALUE = 0.05
+	#VARYVALUE = 0.055
 
    	if ( (value > (compareValue * (1.0-VARYVALUE)))  and (value < (compareValue *(1.0+VARYVALUE))) ):
      		return True
@@ -251,6 +252,9 @@ class SDL_Pi_WeatherRack:
       			voltageValue = 0.0
   
 		direction = voltageToDegrees(voltageValue, SDL_Pi_WeatherRack._currentWindDirection)
+                #if SDL_Pi_WeatherRack._currentWindDirection > 90 and SDL_Pi_WeatherRack._currentWindDirection < 270 and direction == 0:
+                #    direction = SDL_Pi_WeatherRack._currentWindDirection
+                SDL_Pi_WeatherRack._currentWindDirection = direction
     		return direction;
 
 

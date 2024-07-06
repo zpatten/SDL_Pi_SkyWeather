@@ -5,7 +5,7 @@ import  SDL_Pi_GrovePowerDrive
 import time
 
 GPIO_Pin_PowerDrive_Sig1 = 5
-GPIO_Pin_PowerDrive_Sig2 = 6
+GPIO_Pin_PowerDrive_Sig2 = 5
 
 
 myPowerDrive = SDL_Pi_GrovePowerDrive.SDL_Pi_GrovePowerDrive(GPIO_Pin_PowerDrive_Sig1, GPIO_Pin_PowerDrive_Sig2, True, True)

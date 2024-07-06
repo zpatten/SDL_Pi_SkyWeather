@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -x
+
+apt install -y git i2c-tools python-smbus pigpiod python-pigpio python-pip libi2c-dev python-numpy python-matplotlib python-mpltoolkits.basemap build-essential python-pip python-dev python-requests python-mysqldb python-apscheduler python-apscheduler python-concurrent.futures python-funcsigs python-picamera python-serial fonts-freefont-ttf
+apt install -y mariadb-server phpmyadmin pigpiod

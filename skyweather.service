@@ -1,0 +1,15 @@
+[Unit]
+Description=SkyWeather
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/home/pi/SDL_Pi_SkyWeather
+ExecStart=/usr/bin/python -O -u /home/pi/SDL_Pi_SkyWeather/SkyWeather.py
+Restart=always
+RestartSec=10s
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

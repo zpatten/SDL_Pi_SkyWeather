@@ -6,10 +6,10 @@
 
 # tests SDL_Pi_DustSensor Driver
 import sys
-sys.path.append('./SDL_Pi_DustSensor')
+sys.path.append('./SDL_Pi_HM3301')
 import time
 import pigpio
-import SDL_Pi_DustSensor
+import SDL_Pi_HM3301
 
 import RPi.GPIO as GPIO
 
@@ -22,66 +22,113 @@ except ImportError:
 
 import state
 
+def resetPiGpio():
+    pi = pigpio.pi()
+    try:
+        pi.bb_i2c_close(SDA=config.DustSensorSDA)
+    finally:
+        pi.stop()
+    
 def powerOnDustSensor():
-        GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
-        GPIO.output(config.DustSensorPowerPin, True)
-        time.sleep(1)
+    global dustSensor
+    if (config.SWDEBUG):
+        print ("Turning Dust Power On")
+    #pi = pigpio.pi()
+    #try:
+    #    pi.bb_i2c_close(SDA=config.DustSensorSDA)
+    #finally:
+    #    pi.stop()
+    GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
+    GPIO.output(config.DustSensorPowerPin, True)
+    time.sleep(30)
+    pi = pigpio.pi()
+    try:
+        dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
+    except:
+        resetPiGpio()
+        dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
+
+    #time.sleep(1)
+    #try:
+    #pi = pigpio.pi()
+    #dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
+    #except:
+    #    pi.bb_i2c_close()
+    #    pi.stop()
+    #    pi = pigpio.pi()
+    #    dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
+    #time.sleep(1)
+
 
 def powerOffDustSensor():
-        GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
-        GPIO.output(config.DustSensorPowerPin, False)
-        time.sleep(1)
+    global dustSensor
+    if (config.SWDEBUG):
+        print ("Turning Dust Sensor Power Off")
+    #try:
+    #    pi.bb_i2c_close(SDA=config.DustSensorSDA)
+    #except:
+    #    pi.stop()
+    #    pi = pigpio.pi()
+    try:
+        dustSensor.close()
+    except:
+        resetPiGpio()
+    #try:
+    #    pi.bb_i2c_close(SDA=config.DustSensorSDA)
+    #finally:
+    #    pi.stop()
+    #pi.bb_i2c_close(SDA=config.DustSensorSDA)
+    #pi.stop()
+    #except:
+    #    pi.bb_i2c_close()
+    #    pi.stop()
+    #time.sleep(1)
+    #finally:
+    GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
+    GPIO.output(config.DustSensorPowerPin, False)
+    #time.sleep(1)
 
 
 def read_AQI():
 
-      if (config.SWDEBUG):
-          print ("###############")
-          print ("Reading AQI")
-          print ("###############")
+    if (config.SWDEBUG):
+        print ("###############")
+        print ("Reading AQI")
+        print ("###############")
 
-      if (config.SWDEBUG):
-          print ("Turning Dust Power On")
-      powerOnDustSensor()
+    aqi = 0
+    #while (int(aqi) == 0):
+    powerOnDustSensor()
 
-      pi = pigpio.pi() # Connect to Pi.
-   
-      dustSensor = SDL_Pi_DustSensor.SDL_Pi_DustSensor(pi, config.DustSensorPin) # set the GPIO pin number
-
-      # delay for 30 seconds for calibrated reading
-
-      time.sleep(30)
+    # delay for 30 seconds for calibrated reading
+    ##time.sleep(30)
       
-      # get the gpio, ratio and concentration in particles / 0.01 ft3
-      g, r, c = dustSensor.read()
+    data = dustSensor.get_data()
+    aqi = dustSensor.get_aqi()
+    dustSensor.print_data()
+    checksum_count = 0
+    while ((dustSensor.checksum() != True or int(aqi) == 0) and checksum_count < 10):
+        checksum_count += 1
+        print("HM3301 Checksum Error!")
+        #powerOffDustSensor()
+        #powerOnDustSensor()
+        data = dustSensor.get_data()
+        aqi = dustSensor.get_aqi()
+        dustSensor.print_data()
 
-      # concentration above 1,080,000 considered error
-      if (c>=1080000.00):
-          if (config.SWDEBUG):
-            print("Dust Sensor Concentration Error\n")
+    print("  Current AQI (not 24 hour avg): " + str(int(aqi)))
+    print("")
 
-      if (config.SWDEBUG):
-        print("Air Quality Measurements for PM2.5:")
-        print("  " + str(int(c)) + " particles/0.01ft^3")
+    if int(aqi) != 0:
+        state.Outdoor_AirQuality_Sensor_Value = int(aqi)
 
-      # convert to SI units
-      concentration_ugm3=dustSensor.pcs_to_ugm3(c)
-      if (config.SWDEBUG):
-        print("  " + str(int(concentration_ugm3)) + " ugm^3")
-      
-      # convert SI units to US AQI
-      # input should be 24 hour average of ugm3, not instantaneous reading
-      aqi=dustSensor.ugm3_to_aqi(concentration_ugm3)
-      
-      if (config.SWDEBUG):
-        print("  Current AQI (not 24 hour avg): " + str(int(aqi)))
-        print("")
+    #if (dustSensor.checksum() != True):
+    #    print("HM3301 Checksum Error!")
+    #    dustSensor.print_data()
+    #    data = dustSensor.get_data()
+    #    if (dustSensor.checksum() != True):
+    #        print("HM3301 2 Checksum Errors!")
 
-      state.Outdoor_AirQuality_Sensor_Value = int(aqi)
-      pi.stop() # Disconnect from Pi.
-
-      if (config.SWDEBUG):
-          print ("Turning Dust Sensor Power Off")
-      powerOffDustSensor()
-
+    powerOffDustSensor()
+    #time.sleep(3)
 

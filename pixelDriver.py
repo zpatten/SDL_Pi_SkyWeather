@@ -22,20 +22,20 @@ LED_PIN        = config.pixelPin      # GPIO pin connected to the pixels (must s
 LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
 #LED_DMA        = 10      # DMA channel to use for generating signal (try 10)
 LED_DMA        = 5      # DMA channel to use for generating signal (try 10)
-LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
+LED_BRIGHTNESS = 16     # Set to 0 for darkest and 255 for brightest
 LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
 LED_CHANNEL    = 0
 LED_STRIP      = ws.SK6812_STRIP_RGBW
 #LED_STRIP      = ws.SK6812W_STRIP
 
-#strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
+strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
 # Intialize the library (must be called once before other functions).
-#strip.begin()
+strip.begin()
 
 # Define functions which animate LEDs in various ways.
 def colorWipe(strip, color, wait_ms=50):
 	"""Wipe color across display a pixel at a time."""
-	for i in range(strip.numPixels()):
+	for i in range(LED_COUNT):
 		strip.setPixelColor(i, color)
 		strip.show()
 		time.sleep(wait_ms/1000.0)
@@ -44,51 +44,72 @@ def theaterChase(strip, color, wait_ms=50, iterations=10):
 	"""Movie theater light style chaser animation."""
 	for j in range(iterations):
 		for q in range(3):
-			for i in range(0, strip.numPixels(), 3):
+			for i in range(0, LED_COUNT, 3):
 				strip.setPixelColor(i+q, color)
 			strip.show()
 			time.sleep(wait_ms/1000.0)
-			for i in range(0, strip.numPixels(), 3):
+			for i in range(0, LED_COUNT, 3):
 				strip.setPixelColor(i+q, 0)
 
-def wheel(pos):
-	"""Generate rainbow colors across 0-255 positions."""
-	if pos < 85:
-		return Color(pos * 3, 255 - pos * 3, 0)
-	elif pos < 170:
-		pos -= 85
-		return Color(255 - pos * 3, 0, pos * 3)
-	else:
-		pos -= 170
-		return Color(0, pos * 3, 255 - pos * 3)
+PALETTE = []
+PALETTE.append(Color(0, 255, 0))
+PALETTE.append(Color(255, 0, 0))
+PALETTE.append(Color(0, 0, 255))
+#print('PALETTE=', PALETTE)
 
-def rainbow(strip, wait_ms=20, iterations=1):
-	"""Draw rainbow that fades across all pixels at once."""
-	for j in range(256*iterations):
-		for i in range(strip.numPixels()):
-			strip.setPixelColor(i, wheel((i+j) & 255))
-		strip.show()
-		time.sleep(wait_ms/1000.0)
+RGB_PALETTE = []
+for x in range(256):
+  RGB_PALETTE.append(Color(255 - x, x, 0))
+for x in range(256):
+  RGB_PALETTE.append(Color(0, 255 - x, x))
+for x in range(256):
+  RGB_PALETTE.append(Color(x, 0, 255 - x))
+#print('RGB_PALETTE=', RGB_PALETTE)
 
-def rainbowCycle(strip, wait_ms=20, iterations=5):
-	"""Draw rainbow that uniformly distributes itself across all pixels."""
-	for j in range(256*iterations):
-		for i in range(strip.numPixels()):
-			strip.setPixelColor(i, wheel(((i * 256 / strip.numPixels()) + j) & 255))
-		strip.show()
-		time.sleep(wait_ms/1000.0)
+RGB_PALETTE_FADE = []
+for x in range(256):
+  RGB_PALETTE_FADE.append(Color(x, 0, 0))
+for x in range(256):
+  RGB_PALETTE_FADE.append(Color(255 - x, x, 0))
+for x in range(256):
+  RGB_PALETTE_FADE.append(Color(0, 255 - x, x))
+for x in range(256):
+  RGB_PALETTE_FADE.append(Color(0, 0, 255 - x))
+#print('RGB_PALETTE_FADE=', RGB_PALETTE_FADE)
+
+def wheel(pos, palette=RGB_PALETTE):
+  """Generate rainbow colors across 0-255 positions."""
+  max_pos = len(palette)
+  rgb_pos = pos % max_pos
+  return palette[rgb_pos]
+
+def rainbow(strip, wait_ms=500, iterations=1):
+  """Draw rainbow that fades across all pixels at once."""
+  wait_ms = wait_ms / 1000.0
+  for j in range(len(PALETTE) * iterations):
+    for i in range(LED_COUNT):
+      strip.setPixelColor(i, wheel(j+i, PALETTE))
+    strip.show()
+    time.sleep(wait_ms)
+
+def rainbowCycle(strip, wait_ms=500, iterations=1):
+  """Draw rainbow that uniformly distributes itself across all pixels."""
+  wait_ms = wait_ms / 1000.0
+  for j in range(0, len(RGB_PALETTE) * iterations, 64):
+    for i in range(LED_COUNT):
+      strip.setPixelColor(i, wheel(j, RGB_PALETTE))
+    strip.show()
+    time.sleep(wait_ms)
 
 def theaterChaseRainbow(strip, wait_ms=50):
-	"""Rainbow movie theater light style chaser animation."""
-	for j in range(256):
-		for q in range(3):
-			for i in range(0, strip.numPixels(), 3):
-				strip.setPixelColor(i+q, wheel((i+j) % 255))
-			strip.show()
-			time.sleep(wait_ms/1000.0)
-			for i in range(0, strip.numPixels(), 3):
-				strip.setPixelColor(i+q, 0)
-
+  """Rainbow movie theater light style chaser animation."""
+  wait_ms = 10.0 / float((len(RGB_PALETTE) * iterations))
+  print("wait_ms", wait_ms)
+  for j in range(len(RGB_PALETTE)*iterations):
+    for i in range(LED_COUNT):
+      strip.setPixelColor(i, wheel(j+i))
+    strip.show()
+    time.sleep(wait_ms)
 
 
 ###############
@@ -96,101 +117,104 @@ def theaterChaseRainbow(strip, wait_ms=50):
 ###############
 
 def blinkLED(PixelLock, pixel, color, times, length):
-    if (config.runLEDs == True):
-        
-        if (PixelLock.acquire(False) == False):
-            # We are locked so return - Don't wait
-            if (config.SWDEBUG):
-                print ("N--->Blink LED:Thread Locked")
-            return
-        try:
-            strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
-            # Intialize the library (must be called once before other functions).
-            strip.begin()
-        
-            if (config.SWDEBUG):
-                print "N--->Blink LED:%i/%i/%i/%6.2f" % (pixel, color, times, length)
-    
-            for x in range(0, times):
-                strip.setPixelColor(0, color)
-                strip.show()
-                time.sleep(length)
-	
-            strip.setPixelColor(0, Color(0,0,0))
-            strip.show()
-        
+  global strip
 
-        except:
-            pass
-        PixelLock.release()
+  if (config.runLEDs == True):
+    if (PixelLock.acquire(False) == False):
+      # We are locked so return - Don't wait
+      if (config.SWDEBUG):
+        print ("N--->Blink LED:Thread Locked")
+      return
+
+    try:
+      #strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
+      # Intialize the library (must be called once before other functions).
+      #strip.begin()
+        
+      if (config.SWDEBUG):
+        print "N--->Blink LED:%i/%i/%i/%6.2f" % (pixel, color, times, length)
+
+      for x in range(LED_COUNT):
+        strip.setPixelColor(x, Color(0, 0, 0))
+      strip.show()
+    
+      strip.setPixelColor(0, Color(0, 255, 0))
+      strip.show()
+      time.sleep(length)
+	
+      for x in range(LED_COUNT):
+        strip.setPixelColor(x, Color(0, 0, 0))
+      strip.show()
+
+    except Exception as e:
+      print(e)
+    PixelLock.release()
 
 
     
 def statusLEDs(PixelLock):
-    global strip
-
-    '''
-    if (PixelLock.acquire(False) == False):
-        # We are locked so return - Don't wait
-        if (config.SWDEBUG):
-            print ("N--->status LEDs :Thread Locked")
-        return
-    '''
-    if (PixelLock.acquire(False) == False):
-         # We are locked so return - Don't wait
-         if (config.SWDEBUG):
-             print ("N--->statusLEDs:Thread Locked")
-         return
+  global strip
+  '''
+  if (PixelLock.acquire(False) == False):
+    # We are locked so return - Don't wait
+    if (config.SWDEBUG):
+      print ("N--->status LEDs :Thread Locked")
+    return
+  '''
+  if (PixelLock.acquire(False) == False):
+    # We are locked so return - Don't wait
+    if (config.SWDEBUG):
+      print ("N--->statusLEDs:Thread Locked")
+    return
     
-    try:
-        strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
-        # Intialize the library (must be called once before other functions).
-        strip.begin()
+  try:
+    #strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
+    # Intialize the library (must be called once before other functions).
+    #strip.begin()
     
-        if (config.SWDEBUG):
-            print ("N ---->statusLEDs Running")
-            print ("state.runRainbow =", state.runRainbow)
-            print ("state.flashStrip =", state.flashStrip)
+    if (config.SWDEBUG):
+      print ("N ---->statusLEDs Running")
+      print ("state.runRainbow =", state.runRainbow)
+      print ("state.flashStrip =", state.flashStrip)
          
-        if (config.runLEDs == True):
-            if (state.flashStrip == True):
-                updateBlynk.stopFlash()
-                state.flashStrip = False
+    if (config.runLEDs == True):
+      if (state.flashStrip == True):
+        updateBlynk.stopFlash()
+        state.flashStrip = False
              
-                updateBlynk.blynkStatusTerminalUpdate("Flashing Strips")
-                # Now do the flash
+        updateBlynk.blynkStatusTerminalUpdate("Flashing Strips")
+        # Now do the flash
     
-                for i in range(0,16):
-                    strip.setPixelColor(i,Color(255,255,255))
-                strip.show()
-                time.sleep(0.5)
-                for i in range(0,16):
-                    strip.setPixelColor(i,Color(0,0,0))
-                strip.show()
+        for i in range(LED_COUNT):
+          strip.setPixelColor(i,Color(255,255,255))
+        strip.show()
+        time.sleep(0.5)
+        for i in range(LED_COUNT):
+          strip.setPixelColor(i,Color(0,0,0))
+        strip.show()
 
+      while (state.runRainbow == True):
+        if (config.SWDEBUG):
+          print "rainbow start"
+        rainbow(strip)
+        #rainbowCycle(strip)
+        #theaterChaseRainbow(strip)
+        if (config.SWDEBUG):
+          print "rainbow end"
 
-            while (state.runRainbow == True):
-                if (config.SWDEBUG):
-                    print "rainbow start"
-                rainbow(strip)
-                #rainbowCycle(strip)
-                #theaterChaseRainbow(strip)
-                if (config.SWDEBUG):
-                    print "rainbow end"
+        for i in range(LED_COUNT):
+          strip.setPixelColor(i,Color(0,0,0))
+        strip.show()
 
-            for i in range(0,16):
-                strip.setPixelColor(i,Color(0,0,0))
-    
-            strip.show()
+      else:
+        for i in range(LED_COUNT):
+          strip.setPixelColor(i,Color(0,0,0))
+          strip.show()
 
+  except Exception as e:
+    print(e)
 
-        else:
-            for i in range(0,16):
-                strip.setPixelColor(i,Color(0,0,0))
-                strip.show()
-    except:
-        pass
-    PixelLock.release()
+  PixelLock.release()
 
 
 

@@ -55,7 +55,7 @@ currentAs3935LastLightningTimeStamp = 0
 
 runRainbow = False
 flashStrip = False
-runOLED = True
+runOLED = False
 
 # status Values
 
