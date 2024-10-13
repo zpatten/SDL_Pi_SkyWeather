@@ -40,7 +40,7 @@ def takeSkyPicture():
     try:
         #camera.rotation = 180
         camera.rotation = 270
-        camera.resolution = (1920, 1080)
+        camera.resolution = (2328, 1748)
         # Camera warm-up time
         time.sleep(2)
 

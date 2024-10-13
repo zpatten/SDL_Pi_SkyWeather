@@ -163,7 +163,7 @@ def patTheDog():
     GPIO.output(config.WATCHDOGTRIGGER, True)
     GPIO.setup(config.WATCHDOGTRIGGER, GPIO.IN)
 
-patTheDog()
+#patTheDog()
 
 state.mqtt_client = mqtt.Client(client_id="SkyWeather")
 state.mqtt_client.username_pw_set(config.MQTT_Username, config.MQTT_Password)
@@ -317,7 +317,7 @@ try:
     print "visible=", visible
     #if (visible == 0):
     while visible == 0:
-        patTheDog()
+        #patTheDog()
         Sunlight_Sensor = SDL_Pi_SI1145.SDL_Pi_SI1145(indoor=0)
         time.sleep(5.0)
         visible = Sunlight_Sensor.readVisible()
@@ -700,6 +700,7 @@ SpikeDetection = config.AS3935_Lightning_Config[5]
 
 
 try:
+                subprocess.call(['i2cdetect', '-y', '1'])
 
                 print "as3935 start"
 
@@ -718,6 +719,8 @@ try:
          	    tca9545.write_control_register(TCA9545_CONFIG_BUS1)
 
 except IOError as e:
+                subprocess.call(['i2cdetect', '-y', '1'])
+
                 print "I/O error({0}): {1}".format(e.errno, e.strerror)
         	as3935 = RPi_AS3935(address=0x03, bus=1)
 
@@ -1083,7 +1086,7 @@ def sampleWeather():
                 time.sleep(1.0)
                 visible = Sunlight_Sensor.readVisible()
                 while visible == 0:
-                    patTheDog()
+                    #patTheDog()
                     Sunlight_Sensor = SDL_Pi_SI1145.SDL_Pi_SI1145(indoor=0)
                     time.sleep(5.0)
                     visible = Sunlight_Sensor.readVisible()
@@ -1813,7 +1816,7 @@ try:
     config.DustSensor_Present = True
 except Exception as e:
     print(e)
-patTheDog()
+#patTheDog()
 
 
 # Initialize Variables
@@ -1910,7 +1913,7 @@ scheduler.add_listener(ap_my_listener, apscheduler.events.EVENT_JOB_ERROR)
 scheduler.add_job(tick, 'interval', seconds=60)
 
 # sample and Watchdog jobs
-scheduler.add_job(patTheDog, 'interval', seconds=10)   # reset the WatchDog Timer
+#scheduler.add_job(patTheDog, 'interval', seconds=10)   # reset the WatchDog Timer
 
 scheduler.add_job(sampleAndDisplay, 'interval', seconds=60)
 
