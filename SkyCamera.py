@@ -98,12 +98,6 @@ def takeSkyPicture():
 
     os.system("/usr/bin/cp -v static/skycamera.jpg /home/pi/images/skyweather/$(date --iso-8601=seconds).jpg")
 
-except:
-    print(traceback.format_exc()) 
-    print ("--------------------")
-    print ("SkyCam Picture Failed")
-    print ("--------------------")
-
 
 
 takeSkyPicture()
