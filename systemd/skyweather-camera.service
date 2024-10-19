@@ -1,0 +1,14 @@
+[Unit]
+Description=SkyWeather SkyCamera
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/home/pi/SDL_Pi_SkyWeather
+ExecStart=/home/pi/.pyenv/versions/2.7.18/envs/skyweather/bin/python -OO -u /home/pi/SDL_Pi_SkyWeather/SkyCamera.py
+Type=oneshot
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

@@ -64,8 +64,6 @@ EnglishMetric = 0
 
 
 # Solar Values
-
-
 batteryVoltage = 0
 batteryCurrent = 0
 solarVoltage = 0
@@ -77,37 +75,15 @@ solarPower = 0
 loadPower = 0
 batteryCharge = 0
 SolarMAXLastReceived = "None"
-
-# WXLink Values
-WXbatteryVoltage = 0
-WXbatteryCurrent = 0
-WXsolarVoltage = 0
-WXsolarCurrent = 0
-WXloadVoltage = 5.0
-WXloadCurrent = 0
-WXbatteryPower = 0
-WXsolarPower = 0
-WXloadPower = 0
-WXbatteryCharge = 0
-
 SolarMaxInsideTemperature = 0.0
 SolarMaxInsideHumidity = 0.0
+
 # Fan State
-
 fanState = False
-
-# WXLink Blocks
-block1 = ""
-block2 = ""
-stringblock1 = ""
-stringblock2 = ""
-block1_orig = ""
-block2_orig = ""
 
 ll = None
 
 def printState():
-
     print "-------------"
     print "Current State"
     print "-------------"
@@ -140,34 +116,15 @@ def printState():
     print "Indoor_AirQuality_Sensor_Value = ",  Indoor_AirQuality_Sensor_Value 
 
     print "-------------"
-
-
-    print "currentAs3935Interrupt = ", currentAs3935Interrupt 
-
-    print "currentAs3935LastInterrupt = ", currentAs3935LastInterrupt 
-    print "currentAs3935LastDistance = ",  currentAs3935LastDistance 
-    print "currentAs3935LastStatus = ", currentAs3935LastStatus 
-    
-    print "currentAs3935LastLightningTimeStamp = ", currentAs3935LastLightningTimeStamp 
-
-
-    
-    print "-------------"
-
-
     print "runRainbow = ", runRainbow 
     print "flashStrip = ", flashStrip 
     print "runOLED =", runOLED 
+
     print "-------------"
-
-
-
     print "Last_Event = ", Last_Event 
     print "EnglishMetric = ", EnglishMetric 
-    
-    
-    print "-------------"
 
+    print "-------------"
     print "batteryVoltage", batteryVoltage 
     print "batteryCurrent", batteryCurrent
     print "solarVoltage", solarVoltage 
@@ -179,28 +136,6 @@ def printState():
     print "loadPower", loadPower
     print "batteryCharge", batteryCharge
 
-    print "SolarMAX Inside Temperature", SolarMaxInsideTemperature
-    print "SolarMAX Inside Humidity", SolarMaxInsideHumidity
-    print "SolarMAX Last Received", SolarMAXLastReceived
-    print "-------------"
-
-    print "-------------"
-
-    print "WXbatteryVoltage", WXbatteryVoltage 
-    print "WXbatteryCurrent", WXbatteryCurrent
-    print "WXsolarVoltage", WXsolarVoltage 
-    print "WXsolarCurrent", WXsolarCurrent
-    print "WXloadVoltage", WXloadVoltage
-    print "WXloadCurrent", WXloadCurrent
-    print "WXbatteryPower", WXbatteryPower
-    print "WXsolarPower", WXsolarPower
-    print "WXloadPower", WXloadPower
-    print "WXbatteryCharge", WXbatteryCharge
-
     print "-------------"
     print "fanState = ", fanState
     print "-------------"
-    print "WXLink Blocks"
-    print "Block1 Length= ", len(block1)
-    print "Block2 Length= ", len(block2)
-

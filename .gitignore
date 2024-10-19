@@ -12,3 +12,4 @@ static/SkyCamera.py
 static/*.jpg
 *.pyo
 *.py~
+state.json

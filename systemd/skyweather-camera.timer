@@ -1,0 +1,9 @@
+[Unit]
+Description=SkyWeather SkyCamera Timer
+
+[Timer]
+OnUnitActiveSec=60s
+OnBootSec=60s
+
+[Install]
+WantedBy=timers.target
