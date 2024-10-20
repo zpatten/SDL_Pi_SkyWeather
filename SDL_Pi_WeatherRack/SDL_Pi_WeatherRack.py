@@ -339,7 +339,8 @@ class SDL_Pi_WeatherRack:
     			# km/h * 1000 msec
     
     			SDL_Pi_WeatherRack._currentWindCount = 0;
-    			delay(SDL_Pi_WeatherRack._sampleTime*1000);
+    			#delay(SDL_Pi_WeatherRack._sampleTime*1000);
+    			time_.sleep(SDL_Pi_WeatherRack._sampleTime);
     			SDL_Pi_WeatherRack._currentWindSpeed = (float(SDL_Pi_WeatherRack._currentWindCount)/float(SDL_Pi_WeatherRack._sampleTime)) * WIND_FACTOR;
 
 

@@ -35,39 +35,8 @@ enable_WLAN_Detection = False
 PingableRouterAddress = "192.168.1.1"
 
 # LED configuration (on use on a Raspberry Pi 3B+)
-
 runLEDs = False
 
-# WXLink and SolarMAX configuration
-SolarMAX_Present = False
-Dual_MAX_WXLink = False
-
-# SolarMAX_Type = "LEAD" for SolarMAX Lead Acid
-# SolarMAX_Type = "LIPO" for SolarMAX LiPo
-SolarMAX_Type = ""
-
-# WeatherSTEM configuration
-
-USEWEATHERSTEM = False
-INTERVAL_CAM_PICS__SECONDS = 60
-STATIONMAC = MACADDRESS
-STATIONKEY="XXXXYYYY"
-STATIONHARDWARE=""
-
-
-# WeatherUnderground Station
-
-WeatherUnderground_Present = False
-WeatherUnderground_StationID = "KWXXXXX"
-WeatherUnderground_StationKey = "YYYYYYY"
-
-############
-# Blynk configuration
-############
-
-USEBLYNK = False 
-BLYNK_AUTH = 'xxxxx'
-BLYNK_URL = 'http://blynk-cloud.com/'
 
 ############
 # AS3935 Lightning Configuration
@@ -86,7 +55,7 @@ BMP280_Altitude_Meters = 328.0
 
 Camera_Present = False
 TCA9545_I2CMux_Present = False
-SunAirPlus_Present = False
+INA3221_Present = False
 AS3935_Present = False
 DS3231_Present = False
 BMP280_Present = False
@@ -98,18 +67,13 @@ ADS1015_Present = False
 ADS1115_Present = False
 OLED_Present = False
 OLED_Originally_Present = False
-WXLink_Present = False
-Sunlight_Present = False
+SI1145_Present = False
 TSL2591_Present = False
-DustSensor_Present = True
+HM3301_Present = True
 
 # set Sunlight High Gain (indoors - 1) or Low Gain (outdoors - 0)
 Sunlight_Gain = 0
 
-
-# if the WXLink has stopped transmitting, == False
-WXLink_Data_Fresh = False
-WXLink_LastMessageID = 0
 
 # Pin definitions
 pixelPin = 21

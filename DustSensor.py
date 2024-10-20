@@ -16,119 +16,81 @@ import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 # Check for user imports
 try:
-            import conflocal as config
+  import conflocal as config
 except ImportError:
-            import config
+  import config
 
 import state
 
 def resetPiGpio():
-    pi = pigpio.pi()
-    try:
-        pi.bb_i2c_close(SDA=config.DustSensorSDA)
-    finally:
-        pi.stop()
+  pi = pigpio.pi()
+  try:
+    pi.bb_i2c_close(SDA=config.DustSensorSDA)
+  finally:
+    pi.stop()
     
 def powerOnDustSensor():
-    global dustSensor
-    if (config.SWDEBUG):
-        print ("Turning Dust Power On")
-    #pi = pigpio.pi()
-    #try:
-    #    pi.bb_i2c_close(SDA=config.DustSensorSDA)
-    #finally:
-    #    pi.stop()
-    GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
-    GPIO.output(config.DustSensorPowerPin, True)
-    time.sleep(30)
-    pi = pigpio.pi()
-    try:
-        dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
-    except:
-        resetPiGpio()
-        dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
+  global dustSensor
 
-    #time.sleep(1)
-    #try:
-    #pi = pigpio.pi()
-    #dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
-    #except:
-    #    pi.bb_i2c_close()
-    #    pi.stop()
-    #    pi = pigpio.pi()
-    #    dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
-    #time.sleep(1)
+  print ("HM3301 Power On")
+  GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
+  GPIO.output(config.DustSensorPowerPin, True)
+  time.sleep(1)
+  pi = pigpio.pi()
+  try:
+    dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
+  except:
+    resetPiGpio()
+    dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
 
 
 def powerOffDustSensor():
-    global dustSensor
-    if (config.SWDEBUG):
-        print ("Turning Dust Sensor Power Off")
-    #try:
-    #    pi.bb_i2c_close(SDA=config.DustSensorSDA)
-    #except:
-    #    pi.stop()
-    #    pi = pigpio.pi()
-    try:
-        dustSensor.close()
-    except:
-        resetPiGpio()
-    #try:
-    #    pi.bb_i2c_close(SDA=config.DustSensorSDA)
-    #finally:
-    #    pi.stop()
-    #pi.bb_i2c_close(SDA=config.DustSensorSDA)
-    #pi.stop()
-    #except:
-    #    pi.bb_i2c_close()
-    #    pi.stop()
-    #time.sleep(1)
-    #finally:
-    GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
-    GPIO.output(config.DustSensorPowerPin, False)
-    #time.sleep(1)
+  global dustSensor
+
+  print ("HM3301 Power Off")
+  try:
+    dustSensor.close()
+  except:
+    resetPiGpio()
+  GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
+  GPIO.output(config.DustSensorPowerPin, False)
+  time.sleep(1)
 
 
 def read_AQI():
+  print ("###############")
+  print ("Reading AQI")
+  print ("###############")
 
-    if (config.SWDEBUG):
-        print ("###############")
-        print ("Reading AQI")
-        print ("###############")
+  attempts = 0
+  aqi = 0
+  checksum = False
 
-    aqi = 0
-    #while (int(aqi) == 0):
-    powerOnDustSensor()
+  powerOnDustSensor()
+  print("HM3301 Calibrating for 30 seconds")
+  time.sleep(30)
 
-    # delay for 30 seconds for calibrated reading
-    ##time.sleep(30)
-      
-    data = dustSensor.get_data()
-    aqi = dustSensor.get_aqi()
-    dustSensor.print_data()
-    checksum_count = 0
-    while ((dustSensor.checksum() != True or int(aqi) == 0) and checksum_count < 10):
-        checksum_count += 1
-        print("HM3301 Checksum Error!")
-        #powerOffDustSensor()
-        #powerOnDustSensor()
-        data = dustSensor.get_data()
-        aqi = dustSensor.get_aqi()
-        dustSensor.print_data()
+  while True:
 
-    print("  Current AQI (not 24 hour avg): " + str(int(aqi)))
-    print("")
+    try:
+      data = dustSensor.get_data()
+      aqi = int(dustSensor.get_aqi())
+      dustSensor.print_data()
+      checksum = dustSensor.checksum()
+    except:
+      pass
 
-    if int(aqi) != 0:
-        state.Outdoor_AirQuality_Sensor_Value = int(aqi)
+    if checksum and aqi > 0:
+      state.Outdoor_AirQuality_Sensor_Value = aqi
+      print("HM3301 Checksum Valid")
+      break
+    else:
+      attempts += 1
+      print("HM3301 Checksum Error!")
+      if attempts > 10:
+        break
+      time.sleep(3)
 
-    #if (dustSensor.checksum() != True):
-    #    print("HM3301 Checksum Error!")
-    #    dustSensor.print_data()
-    #    data = dustSensor.get_data()
-    #    if (dustSensor.checksum() != True):
-    #        print("HM3301 2 Checksum Errors!")
-
-    powerOffDustSensor()
-    #time.sleep(3)
+  print("HM3301 AQI: %d" % aqi)
+  powerOffDustSensor()
 

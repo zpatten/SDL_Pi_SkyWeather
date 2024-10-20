@@ -1,15 +1,4 @@
-# 
-# Contains updated State Variables for Blynk and Sections
-#
-#
-
-
-# WeatherSTEM info
-
-WeatherSTEMHash = ""
-
 # Weather Variables
-
 currentOutsideTemperature = 0.0
 currentOutsideHumidity = 1
 
@@ -36,32 +25,21 @@ pastBarometricReading = 0
 
 Indoor_AirQuality_Sensor_Value = 0
 Outdoor_AirQuality_Sensor_Value = 0
-Hour24_Outdoor_AirQuality_Sensor_Value = 0
-
-
-
 
 # Lightning Values
-
 currentAs3935Interrupt = 0
-
 currentAs3935LastInterrupt = 0
 currentAs3935LastDistance = 0
 currentAs3935LastStatus = 0
-
 currentAs3935LastLightningTimeStamp = 0
 
 # Button Variables
-
 runRainbow = False
 flashStrip = False
 runOLED = False
 
 # status Values
-
-Last_Event = "My Last Event"
 EnglishMetric = 0
-
 
 # Solar Values
 batteryVoltage = 0
@@ -74,68 +52,62 @@ batteryPower = 0
 solarPower = 0
 loadPower = 0
 batteryCharge = 0
-SolarMAXLastReceived = "None"
-SolarMaxInsideTemperature = 0.0
-SolarMaxInsideHumidity = 0.0
 
 # Fan State
 fanState = False
 
-ll = None
 
 def printState():
-    print "-------------"
-    print "Current State"
-    print "-------------"
-    print"currentOutsideTemperature = ",currentOutsideTemperature 
-    print"currentOutsideHumidity = ", currentOutsideHumidity 
+  print("--------------------------------------------------------------------------------")
+  print("Current State")
 
-    print"currentInsideTemperature = ",currentInsideTemperature
-    print"currentInsideHumidity = ",  currentInsideHumidity 
+  print("--------------------------------------------------------------------------------")
+  print("currentOutsideTemperature..: %0.1f" % currentOutsideTemperature)
+  print("currentOutsideHumidity.....: %0.1f" % currentOutsideHumidity)
 
-    print"currentRain60Minutes = ",  currentRain60Minutes 
+  print("currentInsideTemperature...: %0.1f" % currentInsideTemperature)
+  print("currentInsideHumidity......: %0.1f" % currentInsideHumidity)
 
-    print"currentSunlightVisible = ",  currentSunlightVisible 
-    print"currentSunlightIR = ", currentSunlightIR 
-    print"currentSunlightUV = ",  currentSunlightUV 
-    print"currentSunlightUVIndex  = ", currentSunlightUVIndex  
+  print("currentSunlightVisible.....: %0.1f" % currentSunlightVisible)
+  print("currentSunlightIR..........: %0.1f" % currentSunlightIR)
+  print("currentSunlightUV..........: %0.1f" % currentSunlightUV)
+  print("currentSunlightUVIndex.....: %0.1f" % currentSunlightUVIndex)
 
-    print"ScurrentWindSpeed = ", ScurrentWindSpeed
-    print"ScurrentWindGust  = ",  ScurrentWindGust 
-    print"ScurrentWindDirection  = ",  ScurrentWindDirection 
-    print"currentTotalRain  = ", currentTotalRain  
+  print("ScurrentWindSpeed..........: %0.1f" % ScurrentWindSpeed)
+  print("ScurrentWindGust...........: %0.1f" % ScurrentWindGust)
+  print("ScurrentWindDirection......: %0.1f" % ScurrentWindDirection)
+  print("currentRain60Minutes.......: %0.1f" % currentRain60Minutes)
+  print("currentTotalRain...........: %0.1f" % currentTotalRain)
 
-    print "currentBarometricPressure = ", currentBarometricPressure 
-    print "currentAltitude = ", currentAltitude 
-    print "currentSeaLevel = ", currentSeaLevel 
-    print "barometricTrend =",barometricTrend 
-    print "pastBarometricReading = ", pastBarometricReading 
+  print("currentBarometricPressure..: %0.1f" % currentBarometricPressure)
+  print("currentAltitude............: %0.1f" % currentAltitude)
+  print("currentSeaLevel............: %0.1f" % currentSeaLevel)
+  print("barometricTrend............: %0.1f" % barometricTrend)
+  print("pastBarometricReading......: %0.1f" % pastBarometricReading)
 
-    print "Outdoor_AirQuality_Sensor_Value = ",  Outdoor_AirQuality_Sensor_Value 
-    print "Hour24_Outdoor_AirQuality_Sensor_Value = ",  Hour24_Outdoor_AirQuality_Sensor_Value 
-    print "Indoor_AirQuality_Sensor_Value = ",  Indoor_AirQuality_Sensor_Value 
+  print("AirQuality_Sensor_Value....: %0.1f" % Outdoor_AirQuality_Sensor_Value)
 
-    print "-------------"
-    print "runRainbow = ", runRainbow 
-    print "flashStrip = ", flashStrip 
-    print "runOLED =", runOLED 
+  print("--------------------------------------------------------------------------------")
+  print("runRainbow..: %s" % runRainbow)
+  print("flashStrip..: %s" % flashStrip)
+  print("runOLED.....: %s" % runOLED)
 
-    print "-------------"
-    print "Last_Event = ", Last_Event 
-    print "EnglishMetric = ", EnglishMetric 
+  print("--------------------------------------------------------------------------------")
+  print("EnglishMetric..: %s" % EnglishMetric)
 
-    print "-------------"
-    print "batteryVoltage", batteryVoltage 
-    print "batteryCurrent", batteryCurrent
-    print "solarVoltage", solarVoltage 
-    print "solarCurrent", solarCurrent
-    print "loadVoltage", loadVoltage
-    print "loadCurrent", loadCurrent
-    print "batteryPower", batteryPower
-    print "solarPower", solarPower
-    print "loadPower", loadPower
-    print "batteryCharge", batteryCharge
+  print("--------------------------------------------------------------------------------")
+  print("batteryVoltage..: %0.1f" % batteryVoltage)
+  print("batteryCurrent..: %0.1f" % batteryCurrent)
+  print("solarVoltage....: %0.1f" % solarVoltage)
+  print("solarCurrent....: %0.1f" % solarCurrent)
+  print("loadVoltage.....: %0.1f" % loadVoltage)
+  print("loadCurrent.....: %0.1f" % loadCurrent)
+  print("batteryPower....: %0.1f" % batteryPower)
+  print("solarPower......: %0.1f" % solarPower)
+  print("loadPower.......: %0.1f" % loadPower)
+  print("batteryCharge...: %0.1f" % batteryCharge)
 
-    print "-------------"
-    print "fanState = ", fanState
-    print "-------------"
+  print("--------------------------------------------------------------------------------")
+  print("fanState: %s" % fanState)
+
+  print("--------------------------------------------------------------------------------")
