@@ -661,7 +661,6 @@ try:
   time.sleep(3)
 
   as3935 = RPi_AS3935(address=0x02, bus=1)
-  as3935.reset()
   time.sleep(1)
 
   as3935.set_noise_floor(NoiseFloor)
@@ -684,7 +683,6 @@ except:
     time.sleep(3)
 
     as3935 = RPi_AS3935(address=0x03, bus=1)
-    as3935.reset()
     time.sleep(1)
 
     as3935.set_noise_floor(NoiseFloor)
