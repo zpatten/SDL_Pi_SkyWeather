@@ -180,7 +180,7 @@ def patTheDog():
 ################################################################################
 
 def returnStatusLine(device, state):
-  fill_length = 20 - len(device)
+  fill_length = 10 - len(device)
   line = device
   line += "." * fill_length
   line += ": "
@@ -225,14 +225,15 @@ BUS_DELAY = 1.0
 
 # I2C Mux TCA9545 Detection
 try:
+  print("Detecting TCA9545...")
   tca9545 = SDL_Pi_TCA9545.SDL_Pi_TCA9545(addr=TCA9545_ADDRESS, bus_enable = TCA9545_CONFIG_BUS0)
 
-  # turn I2CBus 1 on
   tca9545.write_control_register(TCA9545_CONFIG_BUS2)
   config.TCA9545_I2CMux_Present = True
+  print("TCA9545 Present")
 except:
-  print("TCA9545 I2C Mux Not Present")
   config.TCA9545_I2CMux_Present = False
+  print("TCA9545 Not Present")
 
 
 def activate_bus(requested_bus, lock=False):
@@ -657,7 +658,12 @@ SpikeDetection = config.AS3935_Lightning_Config[5]
 try:
   print("Detecting AS3935 at 0x02...")
   activate_bus(TCA9545_CONFIG_BUS1)
+  time.sleep(3)
+
   as3935 = RPi_AS3935(address=0x02, bus=1)
+  as3935.reset()
+  time.sleep(1)
+
   as3935.set_noise_floor(NoiseFloor)
   as3935.set_indoors(Indoor)
   as3935.calibrate(tun_cap=TuneCap)
@@ -676,7 +682,10 @@ except:
     print("Detecting AS3935 at 0x03...")
     activate_bus(TCA9545_CONFIG_BUS1)
     time.sleep(3)
+
     as3935 = RPi_AS3935(address=0x03, bus=1)
+    as3935.reset()
+    time.sleep(1)
 
     as3935.set_noise_floor(NoiseFloor)
     as3935.set_indoors(Indoor)
@@ -1014,12 +1023,11 @@ def sampleAndDisplay():
       if (config.OLED_Present) and (state.runOLED):
         Scroll_SSD1306.addLineOLED(display,  "InTemp = \t%0.2f C" % HTUtemperature)
 
+    print("-" * 80)
     if config.AS3935_Present:
       print("AS3935 Lightning Detector Present")
     else:
       print("AS3935 Lightning Detector Not Present")
-
-    print("-" * 80)
 
     state.printState()
 
@@ -1085,7 +1093,6 @@ def sampleAndDisplay():
     print_exception()
 
   I2C_Lock.release()
-  gc.collect()
 
 
 def writeWeatherRecord():
@@ -1156,6 +1163,11 @@ def writePowerRecord():
     del con
 
 
+def writeRecord():
+  writeWeatherRecord()
+  writePowerRecord()
+
+
 def shutdownPi(why):
   pclogging.log(pclogging.INFO, __name__, "Pi Shutting Down: %s" % why)
   time.sleep(10.0)
@@ -1222,13 +1234,6 @@ def updateRain():
   rain60Minutes = totalRainArray()
   lastRainReading = totalRain
 
-
-def barometricTrend():
-  if (state.currentBarometricPressure >= state.pastBarometricReading):
-    state.barometricTrend = True
-  else:
-    state.barometricTrend = False
-  state.pastBarometricReading = state.currentBarometricPressure
 
 
 print("=" * 80)
@@ -1322,8 +1327,7 @@ scheduler.add_job(sampleAndDisplay, 'interval', seconds=60)
 
 # every 5 minutes, push data to mysql and check for shutdown
 if config.enable_MySQL_Logging:
-	scheduler.add_job(writeWeatherRecord, 'interval', seconds=5*60)
-	scheduler.add_job(writePowerRecord, 'interval', seconds=5*60)
+	scheduler.add_job(writeRecord, 'interval', seconds=5*60)
 
 scheduler.add_job(updateRain, 'interval', seconds=int((60/RAIN_ARRAY_SIZE)*60))
 
@@ -1332,9 +1336,6 @@ scheduler.add_job(updateRain, 'interval', seconds=int((60/RAIN_ARRAY_SIZE)*60))
 # every 5 days at 00:04, reboot
 #scheduler.add_job(rebootPi, 'cron', day='5-30/5', hour=0, minute=4, args=["5 day Reboot"]) 
 	
-#check for Barometric Trend (every 15 minutes)
-scheduler.add_job(barometricTrend, 'interval', seconds=15*60)
-
 if config.HM3301_Present:
   scheduler.add_job(read_AQI, 'interval', seconds=15*60)
 

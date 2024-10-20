@@ -20,7 +20,6 @@ currentTotalRain  = 0
 currentBarometricPressure = 0
 currentAltitude = 0 
 currentSeaLevel = 0
-barometricTrend = True
 pastBarometricReading = 0
 
 Indoor_AirQuality_Sensor_Value = 0
@@ -34,8 +33,6 @@ currentAs3935LastStatus = 0
 currentAs3935LastLightningTimeStamp = 0
 
 # Button Variables
-runRainbow = False
-flashStrip = False
 runOLED = False
 
 # status Values
@@ -82,14 +79,11 @@ def printState():
   print("currentBarometricPressure..: %0.1f" % currentBarometricPressure)
   print("currentAltitude............: %0.1f" % currentAltitude)
   print("currentSeaLevel............: %0.1f" % currentSeaLevel)
-  print("barometricTrend............: %0.1f" % barometricTrend)
   print("pastBarometricReading......: %0.1f" % pastBarometricReading)
 
   print("AirQuality_Sensor_Value....: %0.1f" % Outdoor_AirQuality_Sensor_Value)
 
   print("--------------------------------------------------------------------------------")
-  print("runRainbow..: %s" % runRainbow)
-  print("flashStrip..: %s" % flashStrip)
   print("runOLED.....: %s" % runOLED)
 
   print("--------------------------------------------------------------------------------")

@@ -22,26 +22,38 @@ except ImportError:
 
 import state
 
-def resetPiGpio():
+def startPiGPIO():
+  global pi
+
   pi = pigpio.pi()
-  try:
-    pi.bb_i2c_close(SDA=config.DustSensorSDA)
-  finally:
-    pi.stop()
+  time.sleep(1)
+
+def stopPiGPIO():
+  global pi
+
+  #try:
+  #  pi.bb_i2c_close(SDA=config.DustSensorSDA)
+  #finally:
+  pi.stop()
+  time.sleep(1)
     
 def powerOnDustSensor():
-  global dustSensor
+  global dustSensor, pi
 
   print ("HM3301 Power On")
   GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
   GPIO.output(config.DustSensorPowerPin, True)
-  time.sleep(1)
-  pi = pigpio.pi()
+
   try:
+    startPiGPIO()
     dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
   except:
-    resetPiGpio()
-    dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
+    try:
+      stopPiGPIO()
+      startPiGPIO()
+      dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
+    except:
+      pass
 
 
 def powerOffDustSensor():
@@ -50,17 +62,17 @@ def powerOffDustSensor():
   print ("HM3301 Power Off")
   try:
     dustSensor.close()
-  except:
-    resetPiGpio()
+  finally:
+    stopPiGPIO()
+
   GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
   GPIO.output(config.DustSensorPowerPin, False)
-  time.sleep(1)
 
 
 def read_AQI():
-  print ("###############")
-  print ("Reading AQI")
-  print ("###############")
+  print("#" * 80)
+  print("Reading AQI")
+  print("#" * 80)
 
   attempts = 0
   aqi = 0
@@ -74,22 +86,26 @@ def read_AQI():
 
     try:
       data = dustSensor.get_data()
-      aqi = int(dustSensor.get_aqi())
+      value = int(dustSensor.get_aqi())
+      if value > 0:
+        aqi = value
       dustSensor.print_data()
       checksum = dustSensor.checksum()
     except:
       pass
 
     if checksum and aqi > 0:
-      state.Outdoor_AirQuality_Sensor_Value = aqi
       print("HM3301 Checksum Valid")
       break
     else:
       attempts += 1
-      print("HM3301 Checksum Error!")
-      if attempts > 10:
+      print("HM3301 Checksum Error")
+      if attempts > 30:
         break
-      time.sleep(3)
+      time.sleep(1)
+
+  if aqi > 0:
+    state.Outdoor_AirQuality_Sensor_Value = aqi
 
   print("HM3301 AQI: %d" % aqi)
   powerOffDustSensor()

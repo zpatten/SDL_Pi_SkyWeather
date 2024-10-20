@@ -63,7 +63,6 @@ WIND_FACTOR = 2.400 / SDL_INTERRUPT_CLICKS
 def fuzzyCompare(compareValue, value):
 	
 	VARYVALUE = 0.05
-	#VARYVALUE = 0.055
 
    	if ( (value > (compareValue * (1.0-VARYVALUE)))  and (value < (compareValue *(1.0+VARYVALUE))) ):
      		return True
