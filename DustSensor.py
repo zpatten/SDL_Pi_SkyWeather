@@ -23,14 +23,11 @@ except ImportError:
 import state
 
 def startPiGPIO():
-  global pi
-
   pi = pigpio.pi()
   time.sleep(1)
+  return pi
 
-def stopPiGPIO():
-  global pi
-
+def stopPiGPIO(pi):
   #try:
   #  pi.bb_i2c_close(SDA=config.DustSensorSDA)
   #finally:
@@ -38,32 +35,34 @@ def stopPiGPIO():
   time.sleep(1)
     
 def powerOnDustSensor():
-  global dustSensor, pi
+  global dustSensor
 
   print ("HM3301 Power On")
   GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
   GPIO.output(config.DustSensorPowerPin, True)
 
   try:
-    startPiGPIO()
+    pi = startPiGPIO()
     dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
   except:
     try:
-      stopPiGPIO()
-      startPiGPIO()
+      stopPiGPIO(pi)
+      pi = startPiGPIO()
       dustSensor = SDL_Pi_HM3301.SDL_Pi_HM3301(SDA=config.DustSensorSDA, SCL=config.DustSensorSCL, pi=pi)
     except:
       pass
 
+  return pi
 
-def powerOffDustSensor():
+
+def powerOffDustSensor(pi):
   global dustSensor
 
   print ("HM3301 Power Off")
   try:
     dustSensor.close()
   finally:
-    stopPiGPIO()
+    stopPiGPIO(pi)
 
   GPIO.setup(config.DustSensorPowerPin, GPIO.OUT)
   GPIO.output(config.DustSensorPowerPin, False)
@@ -78,7 +77,7 @@ def read_AQI():
   aqi = 0
   checksum = False
 
-  powerOnDustSensor()
+  pi = powerOnDustSensor()
   print("HM3301 Calibrating for 30 seconds")
   time.sleep(30)
 
@@ -108,5 +107,5 @@ def read_AQI():
     state.Outdoor_AirQuality_Sensor_Value = aqi
 
   print("HM3301 AQI: %d" % aqi)
-  powerOffDustSensor()
+  powerOffDustSensor(pi)
 

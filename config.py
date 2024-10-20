@@ -66,7 +66,6 @@ AM2315_Present = False
 ADS1015_Present = False
 ADS1115_Present = False
 OLED_Present = False
-OLED_Originally_Present = False
 SI1145_Present = False
 TSL2591_Present = False
 HM3301_Present = True

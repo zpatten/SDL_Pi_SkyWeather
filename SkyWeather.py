@@ -16,6 +16,7 @@ except ImportError:
   import config
 
 config.SWVERSION = "055"
+config.RETRY_ATTEMPTS = 10
 
 import gc
 gc.enable()
@@ -46,6 +47,8 @@ import state
 
 import json
 import paho.mqtt.client as mqtt
+
+import psutil
 
 
 sys.path.append('./TSL2591')
@@ -250,9 +253,9 @@ def activate_bus(requested_bus, lock=False):
         tca9545.write_control_register(requested_bus)
         time.sleep(BUS_DELAY)
     except:
-      print_exception()
-      print("TCA9545: Activating BUS%d" % BUS_MAP[requested_bus])
+      #print_exception()
       try:
+        print("TCA9545: Activating BUS%d" % BUS_MAP[requested_bus])
         tca9545.write_control_register(requested_bus)
         time.sleep(BUS_DELAY)
       except:
@@ -273,7 +276,7 @@ def restore_bus(lock=False):
         time.sleep(BUS_DELAY)
 
     except:
-      print_exception()
+      #print_exception()
       try:
         print("TCA9545: Restoring BUS%d" % BUS_MAP[previous_bus])
         tca9545.write_control_register(previous_bus)
@@ -541,43 +544,34 @@ except:
 ################################################################################
 # SSD1306 OLED
 
-try:
-  print("Detecting SSD1306...")
-  util.turnOLEDOn()
-  RST = 27
-  display = Adafruit_SSD1306.SSD1306_128_64(rst=RST, i2c_address=0x3C)
-  # Initialize library.
-  display.begin()
-  display.clear()
-  display.display()
-  config.OLED_Present = True
-  config.OLED_Originally_Present = True
-  print("SSD1106 Present")
-except:
-  print_exception()
-  config.OLED_Originally_Present = False
-  config.OLED_Present = False
-  print("SSD1106 Not Present")
-
-try:
-  util.turnOLEDOff()
-except:
-  print_exception()
-
-def initializeOLED():
+attempt = 0
+while True:
+  attempt += 1
+  try:
+    print("Detecting SSD1306...")
     util.turnOLEDOn()
-    try:
-        RST =27
-        display = Adafruit_SSD1306.SSD1306_128_64(rst=RST, i2c_address=0x3C)
-        # Initialize library.
-        display.begin()
-        display.clear()
-        display.display()
-        config.OLED_Present = True
-        config.OLED_Originally_Present = True
-    except:
-        config.OLED_Originally_Present = False
-        config.OLED_Present = False
+    RST = 27
+    display = Adafruit_SSD1306.SSD1306_128_64(rst=RST, i2c_address=0x3C)
+    display.begin()
+    display.clear()
+    display.display()
+  except:
+    pass
+
+  try:
+    util.turnOLEDOff()
+    config.OLED_Present = True
+    print("SSD1106 Present")
+  except:
+    print_exception()
+    config.OLED_Present = False
+    print("SSD1106 Not Present")
+
+  if config.OLED_Present or attempt >= config.RETRY_ATTEMPTS:
+    break
+  else:
+    print("Retrying SSD1306...")
+    time.sleep(1)
 
 
 
@@ -592,51 +586,66 @@ def handle_as3935_interrupt(channel=None):
   print("-" * 80)
 
   I2C_Lock.acquire()
+  activate_bus(TCA9545_CONFIG_BUS1)
 
-  try:
-    activate_bus(TCA9545_CONFIG_BUS1)
+  attempt = 0
+  while True:
+    attempt += 1
+    if attempt > config.RETRY_ATTEMPTS:
+      break
 
-    reason = as3935.get_interrupt()
-    timestamp = time.time()
-    now = datetime.now().strftime('%H:%M:%S - %Y/%m/%d')
+    try:
+      reason = as3935.get_interrupt()
+      timestamp = time.time()
+      now = datetime.now().strftime('%H:%M:%S - %Y/%m/%d')
 
-    as3935LastInterrupt = reason
+      as3935LastInterrupt = reason
 
-    if reason == 0x00:
-      as3935LastStatus = "Spurious Interrupt (%s)" % now
-    elif reason == 0x01:
-      as3935LastStatus = "Noise Floor Too Low; Adjusting (%s)" % now
-      as3935.raise_noise_floor()
-    elif reason == 0x04:
-      as3935LastStatus = "Disturber Detected - Masking (%s)" % now
-      as3935.set_mask_disturber(True)
-    elif reason == 0x08:
-      distance = as3935.get_distance()
-      as3935LastDistance = distance
-      as3935LightningCount += 1
-      as3935LastStatus = "Lightning Detected "  + str(distance) + "km away. (%s)" % now
+      if reason == 0x00:
+        as3935LastStatus = "Spurious Interrupt (%s)" % now
+      elif reason == 0x01:
+        as3935LastStatus = "Noise Floor Too Low; Adjusting (%s)" % now
+        as3935.raise_noise_floor()
+      elif reason == 0x04:
+        as3935LastStatus = "Disturber Detected - Masking (%s)" % now
+        as3935.set_mask_disturber(True)
+      elif reason == 0x08:
+        distance = as3935.get_distance()
+        as3935LastDistance = distance
+        as3935LightningCount += 1
+        as3935LastStatus = "Lightning Detected "  + str(distance) + "km away. (%s)" % now
 
-    pclogging.log(pclogging.INFO, __name__, as3935LastStatus)
+      pclogging.log(pclogging.INFO, __name__, as3935LastStatus)
 
-    print("Last Interrupt = 0x%x:  %s" % (as3935LastInterrupt, as3935LastStatus))
+      print("Last Interrupt = 0x%x:  %s" % (as3935LastInterrupt, as3935LastStatus))
 
-    topic = 'skyweather/lightning'
-    #now_utc = datetime.utcnow()
-    #now_tz = now_utc.replace(tzinfo=pytz.utc).astimezone(timezone)
-    stateMessage = {
-      'as3935Timestamp': timestamp,
-      'as3935LightningCount': as3935LightningCount,
-      'as3935LastDistance': as3935LastDistance,
-      'as3935LastStatus': as3935LastStatus,
-    }
-    mqtt_publish(topic, stateMessage)
+      topic = 'skyweather/lightning'
+      stateMessage = {
+        'as3935Timestamp': timestamp,
+        'as3935LightningCount': as3935LightningCount,
+        'as3935LastDistance': as3935LastDistance,
+        'as3935LastStatus': as3935LastStatus,
+      }
+      mqtt_publish(topic, stateMessage)
 
-    print("-" * 80)
+      print("-" * 80)
 
-  except:
-    print_exception("AS3935 Interrupt")
+      break
+
+    except:
+      print_exception("AS3935 Interrupt")
+      print("AS3935 Retrying...")
+      time.sleep(1)
+
 
   I2C_Lock.release()
+
+
+def register_as3935_interrupt():
+  activate_bus(TCA9545_CONFIG_BUS0)
+  as3935pin = 16 
+  GPIO.setup(as3935pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+  GPIO.add_event_detect(as3935pin, GPIO.RISING, callback=handle_as3935_interrupt)
 
 
 # as3935 Set up Lightning Detector
@@ -655,34 +664,15 @@ DisturberDetection = config.AS3935_Lightning_Config[3]
 WatchDogThreshold = config.AS3935_Lightning_Config[4]
 SpikeDetection = config.AS3935_Lightning_Config[5]
 
-try:
-  print("Detecting AS3935 at 0x02...")
-  activate_bus(TCA9545_CONFIG_BUS1)
-  time.sleep(3)
-
-  as3935 = RPi_AS3935(address=0x02, bus=1)
-  time.sleep(1)
-
-  as3935.set_noise_floor(NoiseFloor)
-  as3935.set_indoors(Indoor)
-  as3935.calibrate(tun_cap=TuneCap)
-  as3935.set_mask_disturber(DisturberDetection)
-  as3935.set_watchdog_threshold(WatchDogThreshold)
-  as3935.set_spike_detection(SpikeDetection)
-
-  config.AS3935_Present = True
-  print("AS3935 Present at 0x02")
-  handle_as3935_interrupt()
-
-except:
-  print("AS3935 Not Present at 0x02")
-
+attempt = 0
+while True:
+  attempt += 1
   try:
-    print("Detecting AS3935 at 0x03...")
+    print("Detecting AS3935...")
     activate_bus(TCA9545_CONFIG_BUS1)
     time.sleep(3)
 
-    as3935 = RPi_AS3935(address=0x03, bus=1)
+    as3935 = RPi_AS3935(address=0x02, bus=1)
     time.sleep(1)
 
     as3935.set_noise_floor(NoiseFloor)
@@ -693,17 +683,17 @@ except:
     as3935.set_spike_detection(SpikeDetection)
 
     config.AS3935_Present = True
-    print("AS3935 Present at 0x03")
+    print("AS3935 Present")
     handle_as3935_interrupt()
 
   except:
-    config.AS3935_Present = False
-    print("AS3935 Not Present at 0x03")
+    print("AS3935 Not Present")
 
-activate_bus(TCA9545_CONFIG_BUS0)
-as3935pin = 16 
-GPIO.setup(as3935pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.add_event_detect(as3935pin, GPIO.RISING, callback=handle_as3935_interrupt)
+  if config.AS3935_Present or attempt >= config.RETRY_ATTEMPTS:
+    break
+  else:
+    print("Retrying AS3935...")
+    time.sleep(1)
 
 
 
@@ -1029,18 +1019,15 @@ def sampleAndDisplay():
 
     state.printState()
 
-    f = open('/sys/class/thermal/thermal_zone0/temp', 'r')
-    line = f.readline()
-    f.close()
-    cpu_temp = float(line) / 1000
-
     topic = 'skyweather/state'
     #strftime( '%Y-%m-%d %H:%M:%S'),
     now_utc = datetime.utcnow()
     now_tz = now_utc.replace(tzinfo=pytz.utc).astimezone(timezone)
     stateMessage = {
       'lastMainReading': now_tz.isoformat(),
-      'cpuTemp': cpu_temp,
+      'cpuTemp': psutil.sensors_temperatures()['cpu_thermal'][0].current,
+      'cpuUsage': psutil.cpu_percent(),
+      'memUsage': psutil.virtual_memory().percent,
       'outsideTemperature': state.currentOutsideTemperature,
       'outsideHumidity': state.currentOutsideHumidity,
 
@@ -1361,7 +1348,9 @@ if not config.INA3221_Present:
 
   batteryCharge = 0 
 
+
 #  Main Loop
+register_as3935_interrupt()
 try:
   while True:
     time.sleep(60)
